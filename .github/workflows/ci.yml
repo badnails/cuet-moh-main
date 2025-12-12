@@ -112,12 +112,12 @@ jobs:
           cache-to: type=gha,mode=max
           load: true
 
-      - name: Run Trivy vulnerability scanner
+      - name: Run Trivy container scan
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: delineate-hackathon-challenge:${{ github.sha }}
           format: 'table'
-          exit-code: '0'
+          exit-code: '1'
           severity: 'CRITICAL,HIGH'
 
       - name: Pipeline success summary
@@ -129,6 +129,7 @@ jobs:
           echo "| Lint | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
           echo "| Test | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
           echo "| Build | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Trivy (Container) | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Docker Image:** \`delineate-hackathon-challenge:${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
 

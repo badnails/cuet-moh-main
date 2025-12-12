@@ -1,189 +1,145 @@
-# Notification Setup Guide
+# Telegram Notification Setup Guide
 
-This guide explains how to set up Slack and Discord notifications for your CI/CD pipeline.
+This guide explains how to set up Telegram notifications for your CI/CD pipeline.
 
-## Slack Notifications
+## Overview
 
-### 1. Create Slack Webhook
+The CI pipeline sends notifications to Telegram after every run, including:
+- ✅/❌ Build status (success/failure)
+- Repository, branch, and commit information
+- Author name
+- Individual job results (Lint, Test, Build)
+- Direct link to view details
 
-1. Go to your Slack workspace
-2. Navigate to: **Apps** → **Incoming WebHooks**
-3. Click **Add to Slack**
-4. Select the channel where notifications should be posted
-5. Click **Add Incoming WebHooks Integration**
-6. Copy the **Webhook URL** (looks like: `https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXX`)
+## Setup
 
-### 2. Add to GitHub Secrets
+### 1. Create a Telegram Bot
+
+1. Open Telegram and search for **@BotFather**
+2. Start a chat and send `/newbot`
+3. Follow the prompts to:
+   - Choose a name for your bot (e.g., "CI Notifications")
+   - Choose a username (must end in `bot`, e.g., `my_ci_notify_bot`)
+4. BotFather will give you a **token** like:
+   ```
+   123456789:ABCdefGHIjklMNOpqrsTUVwxyz
+   ```
+5. Save this token - this is your `TG_TOKEN`
+
+### 2. Get Your Chat ID
+
+#### Option A: Personal Chat
+1. Start a chat with your new bot (search for it and click "Start")
+2. Send any message to the bot
+3. Open this URL in your browser (replace `YOUR_BOT_TOKEN`):
+   ```
+   https://api.telegram.org/botYOUR_BOT_TOKEN/getUpdates
+   ```
+4. Look for `"chat":{"id":123456789}` - that number is your `TG_CHAT_ID`
+
+#### Option B: Group Chat
+1. Add your bot to a group
+2. Send a message in the group
+3. Use the same `getUpdates` URL above
+4. The chat ID for groups is negative (e.g., `-123456789`)
+
+#### Option C: Channel
+1. Add your bot as an admin to your channel
+2. The chat ID is `@channelname` or the numeric ID
+
+### 3. Add Secrets to GitHub
 
 1. Go to your repository on GitHub
 2. Navigate to: **Settings** → **Secrets and variables** → **Actions**
 3. Click **New repository secret**
-4. Name: `SLACK_WEBHOOK_URL`
-5. Value: Paste your Slack webhook URL
-6. Click **Add secret**
+4. Add:
+   - Name: `TG_TOKEN`
+   - Value: Your bot token from BotFather
+5. Click **Add secret**
+6. Repeat for:
+   - Name: `TG_CHAT_ID`
+   - Value: Your chat ID
 
-### 3. Enable Notifications
+## Testing
 
-1. In the same settings page, go to **Variables** tab
-2. Click **New repository variable**
-3. Name: `SLACK_WEBHOOK_ENABLED`
-4. Value: `true`
-5. Click **Add variable**
+After setup, push a commit or create a PR. You should receive a Telegram message like:
 
-### Notification Format
+```
+✅ CI Pipeline success
 
-Slack notifications will include:
-- ✅/❌ Status emoji
-- Branch and commit information
-- Author name
-- Individual job results in a table
-- Timestamp
+Repository: badnails/cuet-moh-main
+Branch: main
+Commit: abc123def
+Author: username
 
-## Discord Notifications
+Results:
+Lint: success
+Test: success
+Build: success
 
-### 1. Create Discord Webhook
-
-1. Go to your Discord server
-2. Select the channel where notifications should appear
-3. Click the **gear icon** (Edit Channel)
-4. Navigate to **Integrations** → **Webhooks**
-5. Click **New Webhook**
-6. Give it a name (e.g., "CI/CD Bot")
-7. Optionally set an avatar
-8. Click **Copy Webhook URL** (looks like: `https://discord.com/api/webhooks/...`)
-
-### 2. Add to GitHub Secrets
-
-1. Go to your repository on GitHub
-2. Navigate to: **Settings** → **Secrets and variables** → **Actions**
-3. Click **New repository secret**
-4. Name: `DISCORD_WEBHOOK_URL`
-5. Value: Paste your Discord webhook URL
-6. Click **Add secret**
-
-### 3. Enable Notifications
-
-1. In the same settings page, go to **Variables** tab
-2. Click **New repository variable**
-3. Name: `DISCORD_WEBHOOK_ENABLED`
-4. Value: `true`
-5. Click **Add variable**
-
-### Notification Format
-
-Discord notifications will include:
-- ✅/❌ Status emoji in title
-- Rich embed with colored border (green for success, red for failure)
-- Branch and commit information
-- Author name
-- Individual job results as inline fields
-- Timestamp
-
-## Testing Notifications
-
-After setting up, push a commit or create a pull request to trigger the CI pipeline. You should see notifications appear in your configured Slack channel or Discord server.
-
-### Troubleshooting
-
-**No notifications appearing?**
-
-1. Verify webhook URLs are correct in GitHub Secrets
-2. Check that enable variables are set to `true`
-3. Ensure your webhook URLs have proper permissions
-4. Check the Actions logs for any error messages in the "Send Slack/Discord notification" steps
-
-**Notifications appear but are malformed?**
-
-1. Ensure you're using the latest version of the workflow
-2. Check that your webhook URL is valid and not expired
-3. For Slack: Verify the app has permission to post in the channel
-4. For Discord: Verify the webhook hasn't been deleted
-
-## Disabling Notifications
-
-To temporarily disable notifications without removing secrets:
-
-1. Go to **Settings** → **Secrets and variables** → **Actions** → **Variables**
-2. Edit `SLACK_WEBHOOK_ENABLED` or `DISCORD_WEBHOOK_ENABLED`
-3. Change value to `false`
-4. Click **Update variable**
-
-## Advanced Customization
-
-To customize notification content, edit the notification steps in `.github/workflows/ci.yml`:
-
-```yaml
-- name: Send Slack notification
-  if: vars.SLACK_WEBHOOK_ENABLED == 'true'
-  env:
-    SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-  run: |
-    # Modify the JSON payload here
-    curl -X POST $SLACK_WEBHOOK_URL ...
+View Details
 ```
 
-You can customize:
-- Message text and formatting
-- Colors for different statuses
-- Additional fields
-- Emoji usage
-- Attachment format
+## Troubleshooting
 
-### Slack Message Builder
-Use [Slack's Block Kit Builder](https://app.slack.com/block-kit-builder) to design custom messages.
+### No notification received?
 
-### Discord Embed Builder
-Use [Discord's Embed Visualizer](https://leovoel.github.io/embed-visualizer/) to design custom embeds.
+1. **Check bot token**: Verify `TG_TOKEN` is correct in GitHub Secrets
+2. **Check chat ID**: Verify `TG_CHAT_ID` is correct (including `-` for groups)
+3. **Bot permissions**: Ensure the bot can send messages to the chat/group/channel
+4. **View Actions logs**: Check the "Send Telegram notification" step for errors
+
+### Common errors
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `401 Unauthorized` | Invalid bot token | Regenerate token with BotFather |
+| `400 Bad Request: chat not found` | Wrong chat ID | Verify chat ID using `getUpdates` |
+| `403 Forbidden` | Bot blocked or not in group | Add bot to group/unblock it |
+
+### Bot not responding to getUpdates?
+
+Make sure you've sent a message to the bot AFTER creating it. The `getUpdates` API only shows recent messages.
+
+## Customization
+
+To customize the notification message, edit the Telegram step in `.github/workflows/ci.yml`:
+
+```yaml
+- name: Send Telegram notification
+  env:
+    TG_TOKEN: ${{ secrets.TG_TOKEN }}
+    TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+  run: |
+    MESSAGE="Your custom message here"
+    
+    curl -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+      -H 'Content-Type: application/json' \
+      -d "{
+        \"chat_id\": \"${TG_CHAT_ID}\",
+        \"text\": \"${MESSAGE}\",
+        \"parse_mode\": \"Markdown\",
+        \"disable_web_page_preview\": true
+      }"
+```
+
+### Supported formatting
+
+Telegram supports Markdown:
+- `*bold*` → **bold**
+- `_italic_` → _italic_
+- `` `code` `` → `code`
+- `[link](url)` → [link](url)
 
 ## Security Notes
 
-- Never commit webhook URLs directly to your code
-- Always use GitHub Secrets for sensitive URLs
-- Regularly rotate webhook URLs if they may have been exposed
-- Use repository-specific webhooks, not personal ones
-- Consider setting up webhook secret verification for additional security
-
-## Multiple Channels
-
-To send notifications to multiple channels:
-
-1. Create additional webhook URLs
-2. Add them as separate secrets (`SLACK_WEBHOOK_URL_2`, etc.)
-3. Duplicate the notification step in the workflow with different webhook URLs
-
-## Example Notifications
-
-### Successful Build (Slack)
-```
-✅ CI Pipeline success
-Branch: `main`
-Commit: `abc123def`
-Author: @username
-
-┌──────┬─────────┐
-│ Lint │ success │
-│ Test │ success │
-│ Build│ success │
-└──────┴─────────┘
-```
-
-### Failed Build (Discord)
-```
-❌ CI Pipeline failure
-
-Branch: `feature/new-api`
-Commit: `xyz789abc`
-Author: username
-
-Lint: success
-Test: failure
-Build: skipped
-
-[Click here to view details]
-```
+- Never commit your bot token directly to code
+- Use GitHub Secrets for all sensitive values
+- Consider creating a dedicated bot for CI notifications
+- Regularly rotate bot tokens if compromised
 
 ## References
 
-- [Slack Incoming Webhooks](https://api.slack.com/messaging/webhooks)
-- [Discord Webhooks](https://discord.com/developers/docs/resources/webhook)
-- [GitHub Actions Secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets)
+- [Telegram Bot API](https://core.telegram.org/bots/api)
+- [BotFather](https://t.me/botfather)
+- [GitHub Encrypted Secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets)

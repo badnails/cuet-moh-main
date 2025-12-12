@@ -658,8 +658,10 @@ npm run lint:fix && npm run format
 The repository includes automated security scanning via `.github/workflows/security.yml`:
 
 - **CodeQL** - Static analysis for security vulnerabilities
-- **Snyk** - Dependency vulnerability scanning
-- **Trivy** - Container image and filesystem scanning
+- **SonarQube** - Code quality and security analysis
+- **Trivy (Filesystem)** - Dependency and source code scanning
+
+Additionally, **Trivy (Container)** runs in the CI pipeline to scan Docker images.
 
 Security scans run:
 - On every push and pull request
@@ -669,16 +671,12 @@ View security findings in the **Security** tab of the repository.
 
 ### Notifications
 
-Configure build notifications for Slack or Discord:
+Configure build notifications via Telegram:
 
 **Setup:**
-1. Add your webhook URL to repository secrets:
-   - `SLACK_WEBHOOK_URL` for Slack
-   - `DISCORD_WEBHOOK_URL` for Discord
-
-2. Enable notifications by adding repository variables:
-   - `SLACK_WEBHOOK_ENABLED=true`
-   - `DISCORD_WEBHOOK_ENABLED=true`
+1. Add secrets to your repository:
+   - `TG_TOKEN` - Your Telegram bot token
+   - `TG_CHAT_ID` - Your Telegram chat ID
 
 **Notification includes:**
 - Build status (success/failure)
@@ -692,7 +690,7 @@ Recommended branch protection rules are documented in [`.github/BRANCH_PROTECTIO
 **Quick setup:**
 1. Navigate to **Settings** → **Branches**
 2. Add protection rule for `main` branch
-3. Require status checks: `lint`, `test`, `build`, `codeql`, `trivy`
+3. Require status checks: `lint`, `test`, `build`, `codeql`, `sonarqube`, `trivy`
 4. Require pull request reviews (1 approver)
 5. Require linear history
 6. Require conversation resolution

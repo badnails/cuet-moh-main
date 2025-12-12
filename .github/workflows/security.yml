@@ -58,7 +58,7 @@ jobs:
         continue-on-error: true
 
   trivy:
-    name: Trivy Container Scan
+    name: Trivy Filesystem Scan
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout

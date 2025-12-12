@@ -19,9 +19,10 @@ Enable **Require status checks to pass before merging**:
 - Select required checks:
   - `lint` (Lint job from CI)
   - `test` (E2E Tests job from CI)
-  - `build` (Build Docker Image job from CI)
+  - `build` (Build Docker Image job from CI, includes Trivy container scan)
   - `codeql` (CodeQL Analysis from Security)
-  - `trivy` (Trivy Container Scan from Security)
+  - `sonarqube` (SonarQube Analysis from Security)
+  - `trivy` (Trivy Filesystem Scan from Security)
 
 #### ✅ Pull Request Reviews
 
@@ -62,7 +63,7 @@ gh api repos/badnails/cuet-moh-main/branches/main/protection \
 {
   "required_status_checks": {
     "strict": true,
-    "contexts": ["lint", "test", "build", "codeql", "trivy"]
+    "contexts": ["lint", "test", "build", "codeql", "sonarqube", "trivy"]
   },
   "enforce_admins": true,
   "required_pull_request_reviews": {
@@ -89,7 +90,7 @@ resource "github_branch_protection" "main" {
 
   required_status_checks {
     strict   = true
-    contexts = ["lint", "test", "build", "codeql", "trivy"]
+    contexts = ["lint", "test", "build", "codeql", "sonarqube", "trivy"]
   }
 
   required_pull_request_reviews {
