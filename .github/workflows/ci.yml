@@ -110,6 +110,15 @@ jobs:
           tags: delineate-hackathon-challenge:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          load: true
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: delineate-hackathon-challenge:${{ github.sha }}
+          format: 'table'
+          exit-code: '0'
+          severity: 'CRITICAL,HIGH'
 
       - name: Pipeline success summary
         run: |
