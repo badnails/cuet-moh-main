@@ -83,7 +83,7 @@ jobs:
       - name: Report test results
         if: always()
         run: |
-          echo "### E2E Test Results :test_tube:" >> $GITHUB_STEP_SUMMARY
+          echo "### E2E Test Results" >> $GITHUB_STEP_SUMMARY
           if [ $? -eq 0 ]; then
             echo "✅ All E2E tests passed!" >> $GITHUB_STEP_SUMMARY
           else
@@ -122,3 +122,50 @@ jobs:
           echo "| Build | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Docker Image:** \`delineate-hackathon-challenge:${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+
+  notify:
+    name: Send Notifications
+    runs-on: ubuntu-24.04
+    needs: [lint, test, build]
+    if: always()
+    steps:
+      - name: Determine status
+        id: status
+        run: |
+          if [[ "${{ needs.lint.result }}" == "success" && "${{ needs.test.result }}" == "success" && "${{ needs.build.result }}" == "success" ]]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "emoji=✅" >> $GITHUB_OUTPUT
+            echo "color=good" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "emoji=❌" >> $GITHUB_OUTPUT
+            echo "color=danger" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Send Telegram notification
+        env:
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+        run: |
+          MESSAGE="${{ steps.status.outputs.emoji }} *CI Pipeline ${{ steps.status.outputs.status }}*
+          
+          *Repository:* \`${{ github.repository }}\`
+          *Branch:* \`${{ github.ref_name }}\`
+          *Commit:* \`${{ github.sha }}\`
+          *Author:* ${{ github.actor }}
+          
+          *Results:*
+          Lint: ${{ needs.lint.result }}
+          Test: ${{ needs.test.result }}
+          Build: ${{ needs.build.result }}
+          
+          [View Details](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+          
+          curl -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+            -H 'Content-Type: application/json' \
+            -d "{
+              \"chat_id\": \"${TG_CHAT_ID}\",
+              \"text\": \"${MESSAGE}\",
+              \"parse_mode\": \"Markdown\",
+              \"disable_web_page_preview\": true
+            }"

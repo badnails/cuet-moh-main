@@ -653,6 +653,53 @@ npm run lint:fix && npm run format
 | **Docker Build Failed** | Dockerfile issues | Test with `npm run docker:prod` |
 | **Cache Issues** | Corrupted dependencies | Clear cache in Actions, re-run |
 
+### Security Scanning
+
+The repository includes automated security scanning via `.github/workflows/security.yml`:
+
+- **CodeQL** - Static analysis for security vulnerabilities
+- **Snyk** - Dependency vulnerability scanning
+- **Trivy** - Container image and filesystem scanning
+
+Security scans run:
+- On every push and pull request
+- Daily at 2 AM UTC (scheduled scan)
+
+View security findings in the **Security** tab of the repository.
+
+### Notifications
+
+Configure build notifications for Slack or Discord:
+
+**Setup:**
+1. Add your webhook URL to repository secrets:
+   - `SLACK_WEBHOOK_URL` for Slack
+   - `DISCORD_WEBHOOK_URL` for Discord
+
+2. Enable notifications by adding repository variables:
+   - `SLACK_WEBHOOK_ENABLED=true`
+   - `DISCORD_WEBHOOK_ENABLED=true`
+
+**Notification includes:**
+- Build status (success/failure)
+- Branch and commit information
+- Individual job results (Lint, Test, Build)
+
+### Branch Protection
+
+Recommended branch protection rules are documented in [`.github/BRANCH_PROTECTION.md`](.github/BRANCH_PROTECTION.md).
+
+**Quick setup:**
+1. Navigate to **Settings** → **Branches**
+2. Add protection rule for `main` branch
+3. Require status checks: `lint`, `test`, `build`, `codeql`, `trivy`
+4. Require pull request reviews (1 approver)
+5. Require linear history
+6. Require conversation resolution
+
+This ensures all code changes go through proper review and testing before merging.
+
 ## License
 
 MIT
+
