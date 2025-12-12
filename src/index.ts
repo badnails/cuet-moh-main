@@ -530,7 +530,7 @@ app.openapi(downloadCheckRoute, async (c) => {
     );
   }
   // Inside your download route
-  console.log(`[DEBUG] Looking for file: ${file_id}`);
+  console.log(`[DEBUG] Looking for file: ${String(file_id)}`);
   const s3Result = await checkS3Availability(file_id);
   return c.json(
     {

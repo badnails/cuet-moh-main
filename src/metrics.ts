@@ -1,3 +1,4 @@
+import type { Context, Next } from "hono";
 import {
   collectDefaultMetrics,
   Counter,
@@ -113,7 +114,6 @@ export const rateLimitHits = new Counter({
 export const register = metricsRegistry;
 
 // HTTP middleware for Hono
-import type { Context, Next } from "hono";
 
 export const httpMiddleware = async (c: Context, next: Next) => {
   const start = Date.now();
