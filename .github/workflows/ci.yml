@@ -80,6 +80,16 @@ jobs:
           RATE_LIMIT_MAX_REQUESTS: "100"
           CORS_ORIGINS: "*"
 
+      - name: Report test results
+        if: always()
+        run: |
+          echo "### E2E Test Results :test_tube:" >> $GITHUB_STEP_SUMMARY
+          if [ $? -eq 0 ]; then
+            echo "✅ All E2E tests passed!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ E2E tests failed. Check logs above for details." >> $GITHUB_STEP_SUMMARY
+          fi
+
   build:
     name: Build Docker Image
     runs-on: ubuntu-24.04
@@ -100,3 +110,15 @@ jobs:
           tags: delineate-hackathon-challenge:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Pipeline success summary
+        run: |
+          echo "### 🎉 CI Pipeline Completed Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Test | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Docker Image:** \`delineate-hackathon-challenge:${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY

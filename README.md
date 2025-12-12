@@ -1,5 +1,7 @@
 # Delineate Hackathon Challenge - CUET Fest 2025
 
+[![CI Pipeline](https://github.com/badnails/cuet-moh-main/actions/workflows/ci.yml/badge.svg)](https://github.com/badnails/cuet-moh-main/actions/workflows/ci.yml)
+
 ## The Scenario
 
 This microservice simulates a **real-world file download system** where processing times vary significantly:
@@ -557,6 +559,99 @@ npm run docker:prod  # Start with Docker (production)
 - Input validation with Zod schemas
 - Path traversal prevention for S3 keys
 - Graceful shutdown handling
+
+## CI/CD Pipeline
+
+### Pipeline Status
+
+[![CI Pipeline](https://github.com/badnails/cuet-moh-main/actions/workflows/ci.yml/badge.svg)](https://github.com/badnails/cuet-moh-main/actions/workflows/ci.yml)
+
+Our CI/CD pipeline automatically runs on every push and pull request to ensure code quality and prevent regressions.
+
+### Pipeline Stages
+
+```
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│   Setup     │───▶│    Lint     │    │    Test     │
+│             │    │  (ESLint,   │    │   (E2E)     │
+│ Dependencies│    │  Prettier)  │    │             │
+└─────────────┘    └─────────────┘    └─────────────┘
+                            │                 │
+                            └────────┬────────┘
+                                     ▼
+                            ┌─────────────┐
+                            │    Build    │
+                            │  (Docker)   │
+                            └─────────────┘
+```
+
+**Pipeline Features:**
+- ✅ **Dependency Caching** - `node_modules` cached for faster builds
+- ✅ **Parallel Execution** - Lint and test run simultaneously
+- ✅ **Fail Fast** - Pipeline stops immediately on errors
+- ✅ **Docker Layer Caching** - Faster image builds with GitHub Actions cache
+- ✅ **Test Reporting** - Clear summaries in GitHub Actions UI
+
+### Running Tests Locally (Before Pushing)
+
+Always run these checks locally before pushing to avoid CI failures:
+
+```bash
+# 1. Run linting
+npm run lint
+
+# 2. Check code formatting
+npm run format:check
+
+# 3. Run E2E tests
+npm run test:e2e
+
+# Or run all checks at once:
+npm run lint && npm run format:check && npm run test:e2e
+```
+
+**Pro tip:** Fix linting and formatting issues automatically:
+```bash
+npm run lint:fix && npm run format
+```
+
+### Understanding CI Results
+
+**Green Check (✅):** All checks passed - ready to merge!
+
+**Red X (❌):** Something failed. Click the "Details" link to see:
+- Which stage failed (Lint, Test, or Build)
+- Error messages and stack traces
+- Test output and logs
+
+**Yellow Dot (🟡):** Pipeline is currently running
+
+### For Contributors
+
+1. **Before pushing code:**
+   - Run `npm run lint` and `npm run format:check`
+   - Run `npm run test:e2e` to verify functionality
+   - Commit only if all checks pass
+
+2. **After pushing:**
+   - Check the Actions tab for pipeline status
+   - If CI fails, click "Details" to see what went wrong
+   - Fix issues and push again
+
+3. **Pull Requests:**
+   - CI must pass before merging
+   - Review the pipeline summary in your PR
+   - Address any failures before requesting review
+
+### Troubleshooting CI Failures
+
+| Error Type | Common Causes | How to Fix |
+|------------|---------------|------------|
+| **Lint Failed** | Code style violations | Run `npm run lint:fix` |
+| **Format Check Failed** | Inconsistent formatting | Run `npm run format` |
+| **E2E Tests Failed** | Breaking changes | Check test logs, fix code |
+| **Docker Build Failed** | Dockerfile issues | Test with `npm run docker:prod` |
+| **Cache Issues** | Corrupted dependencies | Clear cache in Actions, re-run |
 
 ## License
 
