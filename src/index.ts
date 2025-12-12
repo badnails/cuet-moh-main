@@ -13,6 +13,14 @@ import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
 import { timeout } from "hono/timeout";
 import { rateLimiter } from "hono-rate-limiter";
+import {
+  register,
+  httpMiddleware,
+  downloadStarted,
+  downloadCompleted,
+  downloadFailed,
+  s3OperationTimer,
+} from "./metrics.ts";
 
 // Helper for optional URL that treats empty string as undefined
 const optionalUrl = z
@@ -117,6 +125,9 @@ app.use(
       "anonymous",
   }),
 );
+
+// Prometheus metrics middleware
+app.use(httpMiddleware);
 
 // OpenTelemetry middleware
 app.use(
@@ -289,6 +300,8 @@ const checkS3Availability = async (
 }> => {
   const s3Key = sanitizeS3Key(fileId);
 
+
+  console.log(`[DEBUG] Checking S3 - Bucket: ${env.S3_BUCKET_NAME}, Key: ${s3Key}`);
   // If no bucket configured, use mock mode
   if (!env.S3_BUCKET_NAME) {
     const available = fileId % 7 === 0;
@@ -304,13 +317,18 @@ const checkS3Availability = async (
       Bucket: env.S3_BUCKET_NAME,
       Key: s3Key,
     });
+    console.log(`[DEBUG] Sending HeadObjectCommand -> Bucket: '${env.S3_BUCKET_NAME}', Key: '${s3Key}'`);
+
     const response = await s3Client.send(command);
+    
+    console.log(`[DEBUG] S3 Success Response:`, JSON.stringify(response, null, 2));
     return {
       available: true,
       s3Key,
       size: response.ContentLength ?? null,
     };
-  } catch {
+  } catch(error) {
+    console.error(`[DEBUG] S3 Failed:`, error);
     return {
       available: false,
       s3Key: null,
@@ -511,7 +529,8 @@ app.openapi(downloadCheckRoute, async (c) => {
       `Sentry test error triggered for file_id=${String(file_id)} - This should appear in Sentry!`,
     );
   }
-
+  // Inside your download route
+  console.log(`[DEBUG] Looking for file: ${file_id}`);
   const s3Result = await checkS3Availability(file_id);
   return c.json(
     {
@@ -572,6 +591,9 @@ app.openapi(downloadStartRoute, async (c) => {
   const { file_id } = c.req.valid("json");
   const startTime = Date.now();
 
+  // Track active download
+  downloadStarted();
+
   // Get random delay and log it
   const delayMs = getRandomDelay();
   const delaySec = (delayMs / 1000).toFixed(1);
@@ -584,8 +606,11 @@ app.openapi(downloadStartRoute, async (c) => {
   // Simulate long-running download process
   await sleep(delayMs);
 
-  // Check if file is available in S3
+  // Check if file is available in S3 with timing
+  const s3Timer = s3OperationTimer("HeadObject");
   const s3Result = await checkS3Availability(file_id);
+  s3Timer();
+
   const processingTimeMs = Date.now() - startTime;
 
   console.log(
@@ -593,6 +618,7 @@ app.openapi(downloadStartRoute, async (c) => {
   );
 
   if (s3Result.available) {
+    downloadCompleted(processingTimeMs / 1000);
     return c.json(
       {
         file_id,
@@ -605,6 +631,7 @@ app.openapi(downloadStartRoute, async (c) => {
       200,
     );
   } else {
+    downloadFailed();
     return c.json(
       {
         file_id,
@@ -634,6 +661,12 @@ if (env.NODE_ENV !== "production") {
   // Scalar API docs
   app.get("/docs", Scalar({ url: "/openapi" }));
 }
+
+// Prometheus metrics endpoint
+app.get("/metrics", async (c) => {
+  c.header("Content-Type", register.contentType);
+  return c.text(await register.metrics());
+});
 
 // Graceful shutdown handler
 const gracefulShutdown = (server: ServerType) => (signal: string) => {

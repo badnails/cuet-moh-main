@@ -29,6 +29,7 @@
     "glob": "^13.0.0",
     "hono": "^4.10.8",
     "hono-rate-limiter": "^0.4.2",
+    "prom-client": "^15.1.0",
     "zod": "^4.1.13"
   },
   "devDependencies": {
