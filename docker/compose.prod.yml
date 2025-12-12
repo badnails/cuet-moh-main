@@ -66,6 +66,21 @@ services:
       - delineate-network
     restart: unless-stopped
 
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile.prod
+    ports:
+      - "80:80"
+    environment:
+      - VITE_API_URL=http://delineate-app:3000
+      - VITE_APP_ENV=production
+    depends_on:
+      - delineate-app
+    networks:
+      - delineate-network
+    restart: unless-stopped
+
 networks:
   delineate-network:
     driver: bridge

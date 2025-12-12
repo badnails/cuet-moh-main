@@ -114,6 +114,28 @@ services:
     networks:
       - delineate-network
 
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      - ../frontend/src:/app/src
+      - ../frontend/public:/app/public
+      - ../frontend/index.html:/app/index.html
+    environment:
+      - VITE_PROXY_TARGET=http://delineate-app:3000
+      - VITE_JAEGER_URL=http://localhost:16686
+      - VITE_OTEL_COLLECTOR_URL=http://localhost:4318
+      - VITE_APP_ENV=development
+    env_file:
+      - ../frontend/.env
+    depends_on:
+      - delineate-app
+    networks:
+      - delineate-network
+
 networks:
   delineate-network:
     driver: bridge
