@@ -30,7 +30,7 @@
     "hono": "^4.10.8",
     "hono-rate-limiter": "^0.4.2",
     "prom-client": "^15.1.0",
-    "zod": "^4.1.13"
+    "zod": "^4.2.1"
   },
   "devDependencies": {
     "@hono/eslint-config": "^2.0.3",
