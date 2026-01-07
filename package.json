@@ -27,7 +27,7 @@
     "@opentelemetry/semantic-conventions": "^1.38.0",
     "@scalar/hono-api-reference": "^0.9.28",
     "glob": "^13.0.0",
-    "hono": "^4.10.8",
+    "hono": "^4.11.1",
     "hono-rate-limiter": "^0.4.2",
     "prom-client": "^15.1.0",
     "zod": "^4.1.13"
