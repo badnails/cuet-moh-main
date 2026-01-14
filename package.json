@@ -20,7 +20,7 @@
     "@hono/node-server": "^1.19.6",
     "@hono/otel": "^1.0.1",
     "@hono/sentry": "^1.2.2",
-    "@hono/zod-openapi": "^1.1.5",
+    "@hono/zod-openapi": "^1.2.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.208.0",
     "@opentelemetry/resources": "^2.2.0",
     "@opentelemetry/sdk-node": "^0.208.0",
